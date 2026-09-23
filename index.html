@@ -36,6 +36,19 @@
       border-radius: 14px;
     }
 
+    .z88-enclosure.maximized-fullscreen {
+      position: fixed;
+      inset: 0;
+      max-width: 100vw;
+      width: 100vw;
+      min-height: 100vh;
+      border-radius: 0;
+      z-index: 9999;
+      overflow-y: auto;
+      margin: 0;
+      padding: 1rem;
+    }
+
     .lcd-bezel {
       background: #141517;
       border: 3px solid #232428;
@@ -181,6 +194,10 @@
         <button id="soundToggle" class="flex items-center gap-1.5 bg-stone-800 hover:bg-stone-700 px-2.5 py-1 rounded-md border border-white/10 text-stone-300">
           <span id="soundIcon">🔊</span>
           <span id="soundLabel" class="hidden sm:inline">Sound: ON</span>
+        </button>
+        <button id="fullscreenToggle" class="flex items-center gap-1.5 bg-stone-800 hover:bg-stone-700 px-2.5 py-1 rounded-md border border-white/10 text-stone-300 transition-colors" title="Toggle Fullscreen">
+          <span id="fullscreenIcon">⛶</span>
+          <span id="fullscreenLabel" class="hidden sm:inline">Fullscreen</span>
         </button>
         <button id="resetBtn" class="bg-red-950/70 hover:bg-red-900 text-red-300 px-2.5 py-1 rounded-md border border-red-800/50">
           Reset (OZ)
@@ -1185,6 +1202,59 @@
           z88.cursorRow = 0;
           z88.cursorCol = z88.pipeDocLine1.length;
           z88.renderCurrentActivity();
+        });
+      }
+
+      const fsBtn = document.getElementById('fullscreenToggle');
+      if (fsBtn) {
+        const updateFsState = () => {
+          const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.body.classList.contains('fullscreen-mode'));
+          const fsIcon = document.getElementById('fullscreenIcon');
+          const fsLabel = document.getElementById('fullscreenLabel');
+          if (fsIcon) fsIcon.textContent = isFs ? '🗗' : '⛶';
+          if (fsLabel) fsLabel.textContent = isFs ? 'Exit Full' : 'Fullscreen';
+        };
+
+        const toggleFallbackFullscreen = () => {
+          const enclosure = document.querySelector('.z88-enclosure');
+          if (enclosure) {
+            const isMax = enclosure.classList.toggle('maximized-fullscreen');
+            document.body.classList.toggle('fullscreen-mode', isMax);
+            if (window.z88) window.z88.refreshDisplay();
+          }
+        };
+
+        fsBtn.addEventListener('click', async () => {
+          try {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+              if (document.documentElement.requestFullscreen) {
+                await document.documentElement.requestFullscreen();
+              } else if (document.documentElement.webkitRequestFullscreen) {
+                await document.documentElement.webkitRequestFullscreen();
+              } else {
+                toggleFallbackFullscreen();
+              }
+            } else {
+              if (document.exitFullscreen) {
+                await document.exitFullscreen();
+              } else if (document.webkitExitFullscreen) {
+                await document.webkitExitFullscreen();
+              }
+            }
+          } catch (err) {
+            // Gracefully fall back to CSS window maximize if fullscreen is denied in iframe
+            toggleFallbackFullscreen();
+          }
+          updateFsState();
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+          updateFsState();
+          if (window.z88) window.z88.refreshDisplay();
+        });
+        document.addEventListener('webkitfullscreenchange', () => {
+          updateFsState();
+          if (window.z88) window.z88.refreshDisplay();
         });
       }
     }
