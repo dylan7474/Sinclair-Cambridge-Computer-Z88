@@ -6,12 +6,9 @@
   <title>Sinclair Cambridge Computer Z88</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@400;600;700;800&display=swap');
-
     :root {
-      --lcd-bg: #8ba994;
+      --lcd-bg: #8ca893;
       --lcd-pixel: #16241b;
-      --lcd-dim: rgba(22, 36, 27, 0.08);
       --case-body: #1c1d1f;
       --case-rim: #121314;
       --key-rubber: #18191b;
@@ -25,7 +22,7 @@
     body {
       background-color: #0b0c0e;
       color: #e2e8f0;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       user-select: none;
       -webkit-user-select: none;
       overflow-x: hidden;
@@ -47,7 +44,7 @@
 
     .lcd-glass {
       background-color: var(--lcd-bg);
-      box-shadow: inset 0 0 12px rgba(18, 30, 22, 0.45);
+      box-shadow: inset 0 0 14px rgba(18, 30, 22, 0.45);
       position: relative;
     }
 
@@ -55,7 +52,7 @@
       content: " ";
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.06) 100%);
+      background: linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.08) 100%);
       pointer-events: none;
     }
 
@@ -66,7 +63,6 @@
       box-shadow: inset 0 1px 2px rgba(0,0,0,0.1), 0 1px 2px rgba(255,255,255,0.2);
       font-size: 8.5px;
       line-height: 1.18;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       font-weight: 500;
     }
 
@@ -92,7 +88,7 @@
                   0 4px 5px rgba(0, 0, 0, 0.6),
                   inset 0 1px 1px rgba(255, 255, 255, 0.15),
                   inset 0 -1px 2px rgba(0, 0, 0, 0.5);
-      transition: all 0.05s ease;
+      transition: transform 0.04s ease, box-shadow 0.04s ease;
       cursor: pointer;
       display: flex;
       flex-direction: column;
@@ -192,12 +188,14 @@
       </div>
     </div>
 
+    <!-- LCD Display Bezel with high-resolution canvas backing (1280x128) -->
     <div class="lcd-bezel rounded-lg p-2.5 sm:p-3">
-      <div class="lcd-glass rounded relative overflow-hidden aspect-[640/64] w-full border border-black/40">
-        <canvas id="lcdCanvas" width="640" height="64"></canvas>
+      <div class="lcd-glass rounded relative overflow-hidden w-full border border-black/40" style="aspect-ratio: 640 / 64;">
+        <canvas id="lcdCanvas" width="1280" height="128"></canvas>
       </div>
     </div>
 
+    <!-- Authentic Reference Strip -->
     <div class="ref-card rounded-md p-2.5 select-none overflow-x-auto shadow-inner">
       <div class="grid grid-cols-7 gap-2 min-w-[700px]">
         <!-- Col 1 -->
@@ -259,7 +257,7 @@
       </div>
     </div>
 
-    <!-- AUTHENTIC SINCLAIR Z88 5-ROW CHICLET RUBBER KEYBOARD -->
+    <!-- Authentic 5-Row Chiclet Rubber Keyboard -->
     <div class="bg-[#131416] p-2 sm:p-3 rounded-lg border border-[#232428] shadow-inner select-none flex flex-col gap-1 sm:gap-1.5 w-full" id="keyboardContainer">
       
       <!-- ROW 1: 15 keys (ESC, numbers 1-0, -, =, \, DEL) -->
@@ -280,14 +278,13 @@
           <button class="rubber-key flex-1" data-key="=" data-shift="+"><span class="key-legend-sub">+</span><span class="key-legend-main">=</span></button>
           <button class="rubber-key flex-1" data-key="\" data-shift="|"><span class="key-legend-sub">|</span><span class="key-legend-main">\</span></button>
         </div>
-        <!-- DEL on far right aligned with ENTER, UP, and DOWN -->
         <button class="rubber-key key-single w-[7.2%] min-w-[38px] sm:min-w-[48px]" data-key="Backspace">DEL</button>
       </div>
 
-      <!-- ROW 2 & ROW 3 WRAPPER: Perfectly supports the 2-row vertical ENTER key -->
+      <!-- ROW 2 & ROW 3 WRAPPER: Vertical ENTER key -->
       <div class="flex items-stretch gap-1 sm:gap-1.5 w-full">
         
-        <!-- Left Side: Row 2 and Row 3 keys stacked -->
+        <!-- Left Side: Rows 2 and 3 -->
         <div class="flex-1 flex flex-col gap-1 sm:gap-1.5">
           
           <!-- ROW 2: TAB, Q-P, [, ] -->
@@ -324,13 +321,14 @@
             <button class="rubber-key key-single flex-1" data-key="k">K</button>
             <button class="rubber-key key-single flex-1" data-key="l">L</button>
             <button class="rubber-key flex-1" data-key=";" data-shift=":"><span class="key-legend-sub">:</span><span class="key-legend-main">;</span></button>
-            <button class="rubber-key flex-1" data-key="'" data-shift='"\'"><span class="key-legend-sub">"</span><span class="key-legend-main">'</span></button>
+            <!-- Corrected data-shift attribute with safe escaped entity -->
+            <button class="rubber-key flex-1" data-key="'" data-shift='&quot;'><span class="key-legend-sub">&quot;</span><span class="key-legend-main">'</span></button>
             <button class="rubber-key flex-1" data-key="£" data-shift="~"><span class="key-legend-sub">~</span><span class="key-legend-main">£</span></button>
           </div>
 
         </div>
 
-        <!-- TALL 2-ROW VERTICAL ENTER KEY (Spans Row 2 and Row 3) -->
+        <!-- 2-ROW VERTICAL ENTER KEY -->
         <button class="rubber-key key-enter w-[7.2%] min-w-[38px] sm:min-w-[48px] flex flex-col items-center justify-center text-[10px] sm:text-xs font-black tracking-widest leading-none py-2 select-none" data-key="Enter">
           <span>E</span>
           <span>N</span>
@@ -357,55 +355,50 @@
           <button class="rubber-key flex-1" data-key="/" data-shift="?"><span class="key-legend-sub">?</span><span class="key-legend-main">/</span></button>
           <button class="rubber-key key-single flex-[1.9]" data-key="ShiftRight">SHIFT</button>
         </div>
-        <!-- Hollow Outline UP ARROW on far right aligned with DEL & ENTER -->
         <button class="rubber-key w-[7.2%] min-w-[38px] sm:min-w-[48px] flex items-center justify-center" data-key="ArrowUp" title="Up">
-          <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="miter">
+          <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M12 3 L20 11 H15 V21 H9 V11 H4 Z" />
           </svg>
         </button>
       </div>
 
-      <!-- ROW 5 (BOTTOM ROW): INDEX, MENU, HELP, SQUARE, SPACEBAR, CAPS LOCK, LEFT, RIGHT, DOWN ARROW -->
+      <!-- ROW 5: INDEX, MENU, HELP, SQUARE, SPACEBAR, CAPS LOCK, LEFT, RIGHT, DOWN ARROW -->
       <div class="flex items-stretch gap-1 sm:gap-1.5 h-10 sm:h-12 w-full">
         <div class="flex-1 flex gap-1 sm:gap-1.5">
           <button class="rubber-key key-single text-[9.5px] sm:text-[11px] flex-[1.05]" data-key="Index">INDEX</button>
           <button class="rubber-key key-single text-[9.5px] sm:text-[11px] flex-[1.05]" data-key="Menu">MENU</button>
           <button class="rubber-key key-single text-[9.5px] sm:text-[11px] flex-[1.05]" data-key="Help">HELP</button>
           
-          <!-- Square Modifier Key □ -->
           <button class="rubber-key flex-1 flex items-center justify-center" data-key="Square" title="Square Modifier">
             <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
               <rect x="4" y="4" width="16" height="16" rx="2" />
             </svg>
           </button>
           
-          <!-- Blank Continuous Molded Rubber Spacebar -->
+          <!-- Blank Molded Continuous Rubber Spacebar -->
           <button class="rubber-key key-space flex-[5.2]" data-key=" "></button>
 
           <!-- Stacked CAPS / LOCK -->
-          <button class="rubber-key flex flex-col items-center justify-center leading-none text-[8.5px] sm:text-[10px] font-bold flex-[1.3]" data-key="CapsLock">
+          <button class="rubber-key flex flex-col items-center justify-center leading-none text-[8.5px] sm:text-[10px] font-bold flex-[1.3]" data-key="CapsLock" id="capsLockBtn">
             <span>CAPS</span>
             <span class="mt-0.5">LOCK</span>
           </button>
 
-          <!-- Hollow Outline LEFT ARROW -->
           <button class="rubber-key flex-1 flex items-center justify-center" data-key="ArrowLeft" title="Left">
-            <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="miter">
+            <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <path d="M3 12 L11 4 V9 H21 V15 H11 V20 Z" />
             </svg>
           </button>
 
-          <!-- Hollow Outline RIGHT ARROW -->
           <button class="rubber-key flex-1 flex items-center justify-center" data-key="ArrowRight" title="Right">
-            <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="miter">
+            <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <path d="M21 12 L13 4 V9 H3 V15 H13 V20 Z" />
             </svg>
           </button>
         </div>
 
-        <!-- Hollow Outline DOWN ARROW on far right aligned directly below UP, ENTER, and DEL -->
         <button class="rubber-key w-[7.2%] min-w-[38px] sm:min-w-[48px] flex items-center justify-center" data-key="ArrowDown" title="Down">
-          <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="miter">
+          <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M12 21 L4 13 H9 V3 H15 V13 H20 Z" />
           </svg>
         </button>
@@ -413,9 +406,9 @@
 
     </div>
 
-    <!-- Quick instructions / hardware notes -->
+    <!-- Hardware summary footer -->
     <div class="flex flex-wrap items-center justify-between text-stone-400 text-[11px] px-2 pt-1 font-mono">
-      <div>Keyboard: Use physical keys or click. Press <span class="text-stone-200">INDEX</span> for OZ task switcher, <span class="text-stone-200">MENU</span> for commands.</div>
+      <div>Keyboard: Use physical keys or click. Press <span class="text-stone-200">INDEX</span> for OZ switcher, <span class="text-stone-200">MENU</span> for commands.</div>
       <div class="flex gap-4">
         <span>RAM: 128KB</span>
         <span>EPROM: 32KB</span>
@@ -452,14 +445,14 @@
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
           osc.type = 'triangle';
-          osc.frequency.setValueAtTime(1400, this.ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.008);
-          gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
-          gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.008);
+          osc.frequency.setValueAtTime(1200, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.007);
+          gain.gain.setValueAtTime(0.09, this.ctx.currentTime);
+          gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.007);
           osc.connect(gain);
           gain.connect(this.ctx.destination);
           osc.start();
-          osc.stop(this.ctx.currentTime + 0.009);
+          osc.stop(this.ctx.currentTime + 0.008);
         } catch (e) {}
       }
 
@@ -484,40 +477,132 @@
 
     const sound = new Z88Audio();
 
+    // Built-in Sinclair Z88 5x7 dot-matrix font patterns for pixel-perfect Optrex LCD display
+    const Z88_FONT = {
+      ' ': [0,0,0,0,0,0,0],
+      '!': [4,4,4,4,0,0,4],
+      '"': [10,10,10,0,0,0,0],
+      '#': [10,10,31,10,31,10,10],
+      '$': [4,15,20,14,5,30,4],
+      '%': [18,19,8,4,2,25,9],
+      '&': [12,18,20,8,21,18,13],
+      "'": [12,8,4,0,0,0,0],
+      '(': [2,4,8,8,8,4,2],
+      ')': [8,4,2,2,2,4,8],
+      '*': [0,4,21,14,21,4,0],
+      '+': [0,4,4,31,4,4,0],
+      ',': [0,0,0,0,12,8,4],
+      '-': [0,0,0,31,0,0,0],
+      '.': [0,0,0,0,0,12,12],
+      '/': [0,1,2,4,8,16,0],
+      '0': [14,17,19,21,25,17,14],
+      '1': [4,12,4,4,4,4,14],
+      '2': [14,17,1,2,4,8,31],
+      '3': [31,2,4,2,1,17,14],
+      '4': [2,6,10,18,31,2,2],
+      '5': [31,16,30,1,1,17,14],
+      '6': [6,8,16,30,17,17,14],
+      '7': [31,1,2,4,8,8,8],
+      '8': [14,17,17,14,17,17,14],
+      '9': [14,17,17,15,1,2,12],
+      ':': [0,12,12,0,12,12,0],
+      ';': [0,12,12,0,12,8,4],
+      '<': [2,4,8,16,8,4,2],
+      '=': [0,31,0,31,0,0,0],
+      '>': [8,4,2,1,2,4,8],
+      '?': [14,17,1,2,4,0,4],
+      '@': [14,17,1,13,21,21,14],
+      'A': [14,17,17,31,17,17,17],
+      'B': [30,17,17,30,17,17,30],
+      'C': [14,17,16,16,16,17,14],
+      'D': [28,18,17,17,17,18,28],
+      'E': [31,16,16,30,16,16,31],
+      'F': [31,16,16,30,16,16,16],
+      'G': [14,17,16,23,17,17,15],
+      'H': [17,17,17,31,17,17,17],
+      'I': [14,4,4,4,4,4,14],
+      'J': [1,1,1,1,1,17,14],
+      'K': [17,18,20,24,20,18,17],
+      'L': [16,16,16,16,16,16,31],
+      'M': [17,27,21,21,17,17,17],
+      'N': [17,25,21,19,17,17,17],
+      'O': [14,17,17,17,17,17,14],
+      'P': [30,17,17,30,16,16,16],
+      'Q': [14,17,17,17,21,18,13],
+      'R': [30,17,17,30,20,18,17],
+      'S': [14,17,16,14,1,17,14],
+      'T': [31,4,4,4,4,4,4],
+      'U': [17,17,17,17,17,17,14],
+      'V': [17,17,17,17,17,10,4],
+      'W': [17,17,17,21,21,27,17],
+      'X': [17,17,10,4,10,17,17],
+      'Y': [17,17,10,4,4,4,4],
+      'Z': [31,1,2,4,8,16,31],
+      '[': [14,8,8,8,8,8,14],
+      '\\': [0,16,8,4,2,1,0],
+      ']': [14,2,2,2,2,2,14],
+      '^': [4,10,17,0,0,0,0],
+      '_': [0,0,0,0,0,0,31],
+      '`': [8,4,2,0,0,0,0],
+      'a': [0,0,14,1,15,17,15],
+      'b': [16,16,22,25,17,17,30],
+      'c': [0,0,14,16,16,17,14],
+      'd': [1,1,13,19,17,17,15],
+      'e': [0,0,14,17,31,16,14],
+      'f': [6,9,8,28,8,8,8],
+      'g': [0,0,15,17,17,15,1,14],
+      'h': [16,16,22,25,17,17,17],
+      'i': [4,0,12,4,4,4,14],
+      'j': [2,0,6,2,2,2,18,12],
+      'k': [16,16,18,20,24,20,18],
+      'l': [12,4,4,4,4,4,14],
+      'm': [0,0,26,21,21,17,17],
+      'n': [0,0,22,25,17,17,17],
+      'o': [0,0,14,17,17,17,14],
+      'p': [0,0,30,17,30,16,16,16],
+      'q': [0,0,15,17,15,1,1,1],
+      'r': [0,0,22,25,16,16,16],
+      's': [0,0,14,16,14,1,30],
+      't': [8,8,28,8,8,9,6],
+      'u': [0,0,17,17,17,19,13],
+      'v': [0,0,17,17,17,10,4],
+      'w': [0,0,17,17,21,21,10],
+      'x': [0,0,17,10,4,10,17],
+      'y': [0,0,17,17,15,1,14],
+      'z': [0,0,31,2,4,8,31],
+      '{': [2,4,4,8,4,4,2],
+      '|': [4,4,4,4,4,4,4],
+      '}': [8,4,4,2,4,4,8],
+      '~': [0,9,21,18,0,0,0],
+      '£': [14,17,16,28,16,17,31],
+      '│': [4,4,4,4,4,4,4],
+      '█': [31,31,31,31,31,31,31],
+      '·': [0,0,0,4,0,0,0]
+    };
+
     class Z88Display {
       constructor(canvasId) {
         this.canvas = document.getElementById(canvasId);
-        this.ctx = this.canvas.getContext('2d');
+        this.ctx = this.canvas.getContext('2d', { alpha: false });
         this.cols = 80;
         this.rows = 8;
         this.cursorX = 0;
         this.cursorY = 0;
-        this.cursorVisible = true;
         this.flashState = true;
-        
-        // 5x8 pixel font table in a simplified bitmap format for crisp rendering
-        this.initFont();
-        this.buffer = Array(this.rows).fill(null).map(() => Array(this.cols).fill({ char: ' ', inv: false }));
 
-        // Blink timer for cursor and OZ annunciators
+        this.buffer = Array(this.rows).fill(null).map(() => Array(this.cols).fill(null).map(() => ({ char: ' ', inv: false })));
+
         setInterval(() => {
           this.flashState = !this.flashState;
           if (window.z88) window.z88.refreshDisplay();
         }, 500);
       }
 
-      initFont() {
-        // Built-in standard character patterns
-        this.charWidth = 8;
-        this.charHeight = 8;
-      }
-
       cls() {
-        this.ctx.fillStyle = '#8ba994';
-        this.ctx.fillRect(0, 0, 640, 64);
         for (let r = 0; r < this.rows; r++) {
           for (let c = 0; c < this.cols; c++) {
-            this.buffer[r][c] = { char: ' ', inv: false };
+            this.buffer[r][c].char = ' ';
+            this.buffer[r][c].inv = false;
           }
         }
       }
@@ -527,85 +612,144 @@
         for (let i = 0; i < text.length; i++) {
           const col = startCol + i;
           if (col >= 0 && col < this.cols) {
-            this.buffer[row][col] = { char: text[i], inv: inv };
+            this.buffer[row][col].char = text[i];
+            this.buffer[row][col].inv = inv;
           }
         }
       }
 
       render(appState) {
-        this.ctx.fillStyle = '#8ba994';
-        this.ctx.fillRect(0, 0, 640, 64);
+        const ctx = this.ctx;
+        // Background Super-twist LCD green
+        ctx.fillStyle = '#8ca893';
+        ctx.fillRect(0, 0, 1280, 128);
 
-        // Draw faint pixel grid backdrop for authentic super-twist LCD appearance
-        this.ctx.fillStyle = 'rgba(22, 36, 27, 0.04)';
-        for (let y = 0; y < 64; y += 2) {
-          this.ctx.fillRect(0, y, 640, 1);
+        // Faint LCD horizontal dot-matrix guide lines for super-twist realism
+        ctx.fillStyle = 'rgba(22, 36, 27, 0.05)';
+        for (let y = 0; y < 128; y += 4) {
+          ctx.fillRect(0, y, 1280, 2);
         }
 
-        this.ctx.font = '7px "Share Tech Mono", monospace';
-        this.ctx.textBaseline = 'top';
+        const darkPixel = '#16241b';
+        const lightPixel = '#8ca893';
 
-        // Render characters
+        // Draw 80 cols x 8 rows character cells (each cell is 16x16 pixels)
         for (let r = 0; r < this.rows; r++) {
           for (let c = 0; c < this.cols; c++) {
             const cell = this.buffer[r][c];
             const isCursor = (r === this.cursorY && c === this.cursorX && this.flashState);
-            const x = c * 8;
-            const y = r * 8;
+            const isInverted = cell.inv || isCursor;
+            const x = c * 16;
+            const y = r * 16;
 
-            if (cell.inv || isCursor) {
-              this.ctx.fillStyle = '#16241b';
-              this.ctx.fillRect(x, y, 8, 8);
-              this.ctx.fillStyle = '#8ba994';
-            } else {
-              this.ctx.fillStyle = '#16241b';
+            if (isInverted) {
+              ctx.fillStyle = darkPixel;
+              ctx.fillRect(x, y, 16, 16);
             }
 
-            if (cell.char && cell.char !== ' ') {
-              this.ctx.fillText(cell.char, x + 1, y);
+            const ch = cell.char || ' ';
+            const glyph = Z88_FONT[ch] || Z88_FONT[' '];
+
+            ctx.fillStyle = isInverted ? lightPixel : darkPixel;
+            for (let rowIdx = 0; rowIdx < glyph.length; rowIdx++) {
+              const bits = glyph[rowIdx];
+              if (!bits) continue;
+              const py = y + 1 + rowIdx * 2;
+              for (let colIdx = 0; colIdx < 5; colIdx++) {
+                if ((bits >> (4 - colIdx)) & 1) {
+                  const px = x + 3 + colIdx * 2;
+                  ctx.fillRect(px, py, 2, 2);
+                }
+              }
             }
           }
         }
 
-        // Render Right-Hand Hardware Annunciators: OZ & BAT/LOW
-        this.renderAnnunciators();
+        // Render Page Map & Annunciators on the right pane (cols 72-79)
+        this.renderRightAnnunciators(darkPixel, lightPixel);
       }
 
-      renderAnnunciators() {
-        const x = 608;
-        // OZ Logo in top right
-        this.ctx.fillStyle = '#16241b';
-        this.ctx.font = 'bold 9px "Inter", sans-serif';
-        this.ctx.fillText('OZ', x + 10, 2);
+      renderRightAnnunciators(darkPixel, lightPixel) {
+        const ctx = this.ctx;
+        const xStart = 72 * 16; // column 72
 
-        // Battery icon / low bat indicator
-        this.ctx.font = '6px "Inter", sans-serif';
-        this.ctx.strokeRect(x + 4, 48, 22, 11);
-        this.ctx.fillText('BAT', x + 7, 49);
-        this.ctx.fillText('LOW', x + 7, 54);
+        // Vertical divider separating workspace and Page Map
+        ctx.fillStyle = darkPixel;
+        ctx.fillRect(xStart - 4, 0, 2, 128);
+
+        // 1. OZ Logo (Top Right)
+        ctx.fillStyle = darkPixel;
+        ctx.fillRect(xStart + 60, 4, 48, 16);
+        ctx.fillStyle = lightPixel;
+        // Draw 'OZ' inside filled box
+        this.drawDirectChar('O', xStart + 66, 4, lightPixel);
+        this.drawDirectChar('Z', xStart + 84, 4, lightPixel);
+
+        // 2. Live Page Map Window: Miniature representation of an A4 page
+        ctx.strokeStyle = darkPixel;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(xStart + 16, 26, 88, 62);
+
+        // Miniature text line representations on page
+        ctx.fillStyle = darkPixel;
+        ctx.fillRect(xStart + 22, 32, 60, 2);
+        ctx.fillRect(xStart + 22, 38, 72, 2);
+        ctx.fillRect(xStart + 22, 44, 48, 2);
+        ctx.fillRect(xStart + 22, 50, 68, 2);
+        ctx.fillRect(xStart + 22, 56, 32, 2);
+        ctx.fillRect(xStart + 22, 62, 70, 2);
+        ctx.fillRect(xStart + 22, 68, 44, 2);
+        ctx.fillRect(xStart + 22, 74, 52, 2);
+
+        // 3. Battery Status Annunciators (Bottom Right)
+        ctx.strokeStyle = darkPixel;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(xStart + 58, 96, 52, 26);
+        ctx.fillRect(xStart + 110, 104, 4, 10);
+        this.drawDirectMiniText('BAT', xStart + 64, 99, darkPixel);
+        this.drawDirectMiniText('LOW', xStart + 64, 110, darkPixel);
+      }
+
+      drawDirectChar(ch, x, y, color) {
+        const glyph = Z88_FONT[ch] || Z88_FONT[' '];
+        this.ctx.fillStyle = color;
+        for (let r = 0; r < glyph.length; r++) {
+          const bits = glyph[r];
+          if (!bits) continue;
+          for (let c = 0; c < 5; c++) {
+            if ((bits >> (4 - c)) & 1) {
+              this.ctx.fillRect(x + c * 2, y + 1 + r * 2, 2, 2);
+            }
+          }
+        }
+      }
+
+      drawDirectMiniText(text, x, y, color) {
+        for (let i = 0; i < text.length; i++) {
+          this.drawDirectChar(text[i], x + i * 12, y, color);
+        }
       }
     }
 
     class SinclairZ88 {
       constructor() {
         this.lcd = new Z88Display('lcdCanvas');
-        this.activity = 'PIPEDREAM'; // PIPEDREAM, BASIC, INDEX, MENU, CALC, CLOCK, DIARY
+        this.activity = 'PIPEDREAM'; // PIPEDREAM, BASIC, INDEX, MENU, CALC, CLOCK
         this.capsLock = false;
         this.shiftKey = false;
         this.diamondKey = false;
         this.squareKey = false;
 
-        // PipeDream document matching photograph exactly:
-        // Line 1: 1234567890-=\qwertyuiop[]asdfghjkl;'£zxcvbnm,./
+        // Preloaded PipeDream document exactly matching user photograph
         this.pipeDocLine1 = "1234567890-=\\qwertyuiop[]asdfghjkl;'£zxcvbnm,./";
         this.pipeDocLine2 = "";
         this.cursorRow = 0; // 0 = line 1, 1 = line 2
         this.cursorCol = this.pipeDocLine1.length;
 
-        // Basic State
+        // BBC BASIC State
         this.basicHistory = [
           'BBC BASIC (Z80) V1.00',
-          '(C) 1987 R.T.Russell & Cambridge Computer',
+          '(C) 1987 Cambridge Computer & R.T.Russell',
           '>'
         ];
         this.basicInput = '';
@@ -614,7 +758,7 @@
         this.calcInput = '';
         this.calcTape = ['CALCULATOR', 'Ready.'];
 
-        // Diary / Clock
+        // Real-Time Clock
         this.timeString = '';
         this.updateClock();
         setInterval(() => this.updateClock(), 1000);
@@ -633,12 +777,15 @@
       switchActivity(newActivity) {
         sound.beep(800, 0.04);
         this.activity = newActivity;
-        document.getElementById('activityBadge').textContent = 
-          newActivity === 'PIPEDREAM' ? 'PipeDream' :
-          newActivity === 'BASIC' ? 'BBC BASIC' :
-          newActivity === 'INDEX' ? 'OZ Index' :
-          newActivity === 'CALC' ? 'Calculator' :
-          newActivity === 'CLOCK' ? 'Clock' : newActivity;
+        const badge = document.getElementById('activityBadge');
+        if (badge) {
+          badge.textContent = 
+            newActivity === 'PIPEDREAM' ? 'PipeDream' :
+            newActivity === 'BASIC' ? 'BBC BASIC' :
+            newActivity === 'INDEX' ? 'OZ Index' :
+            newActivity === 'CALC' ? 'Calculator' :
+            newActivity === 'CLOCK' ? 'Clock' : newActivity;
+        }
         this.renderCurrentActivity();
       }
 
@@ -685,7 +832,7 @@
         this.lcd.printAt(6, 'OPTIONS');
         this.lcd.printAt(7, 'PRINT');
 
-        // Vertical divider
+        // Vertical divider separating menu from workspace
         for (let r = 0; r < 8; r++) {
           this.lcd.printAt(r, '│', false, 13);
         }
@@ -694,11 +841,9 @@
         const ruler = '.......A.........B.........C.........D.........E.........+F';
         this.lcd.printAt(1, ruler, false, 15);
 
-        // 3. Document Lines
-        // Line 1: row marker + content
+        // 3. Document Lines matching photo
         this.lcd.printAt(2, '1 ' + this.pipeDocLine1, false, 14);
 
-        // Line 2: row marker + 'End of text' block highlight (matching photo)
         if (this.pipeDocLine2.length > 0) {
           this.lcd.printAt(3, '2 ' + this.pipeDocLine2, false, 14);
           this.lcd.printAt(4, '  End of text', true, 16);
@@ -726,7 +871,7 @@
         for (let i = 0; i < 8; i++) {
           const line = displayLines[startIdx + i];
           if (line) {
-            this.lcd.printAt(i, line.substring(0, 74));
+            this.lcd.printAt(i, line.substring(0, 70));
           }
         }
 
@@ -738,25 +883,25 @@
         this.lcd.cls();
         this.lcd.printAt(0, 'INDEX');
         this.lcd.printAt(0, 'SUSPENDED ACTIVITIES', false, 14);
-        this.lcd.printAt(0, 'APPLICATIONS', false, 48);
+        this.lcd.printAt(0, 'APPLICATIONS', false, 44);
 
         this.lcd.printAt(2, 'PipeDream  [Active]', false, 14);
         this.lcd.printAt(3, 'BBC BASIC  [Suspended]', false, 14);
         this.lcd.printAt(4, 'Calculator [Suspended]', false, 14);
         this.lcd.printAt(5, 'Clock      [Suspended]', false, 14);
 
-        this.lcd.printAt(2, '1: PipeDream (◇P)', false, 48);
-        this.lcd.printAt(3, '2: BBC BASIC (◇B)', false, 48);
-        this.lcd.printAt(4, '3: Calculator(◇C)', false, 48);
-        this.lcd.printAt(5, '4: Clock     (◇T)', false, 48);
+        this.lcd.printAt(2, '1: PipeDream (◇P)', false, 44);
+        this.lcd.printAt(3, '2: BBC BASIC (◇B)', false, 44);
+        this.lcd.printAt(4, '3: Calculator(◇C)', false, 44);
+        this.lcd.printAt(5, '4: Clock     (◇T)', false, 44);
 
-        this.lcd.printAt(7, 'Press 1-4, ESC to return, or cursor keys to select.', false, 14);
+        this.lcd.printAt(7, 'Press 1-4, ESC to return, or cursor keys.', false, 14);
       }
 
       renderMenu() {
         this.lcd.cls();
         this.lcd.printAt(0, 'PIPEDREAM COMMAND MENU');
-        this.lcd.printAt(1, '========================================================================');
+        this.lcd.printAt(1, '------------------------------------------------------------------------');
         this.lcd.printAt(2, 'BLOCKS:  ◇B Mark block     ◇C Copy block     ◇M Move block');
         this.lcd.printAt(3, 'EDIT:    ◇D Delete to EOL  ◇T Delete word    ◇R Reformat para');
         this.lcd.printAt(4, 'LAYOUT:  ◇W Column width   ◇H Set margin     ◇S Swap case');
@@ -778,7 +923,7 @@
       renderClock() {
         this.lcd.cls();
         const now = new Date();
-        const dateStr = now.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const dateStr = now.toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
         this.lcd.printAt(1, 'CAMBRIDGE Z88 REAL-TIME CLOCK', false, 10);
         this.lcd.printAt(3, 'DATE: ' + dateStr, false, 10);
         this.lcd.printAt(5, 'TIME: ' + this.timeString, false, 10);
@@ -788,7 +933,6 @@
       handleKey(key, shift = false) {
         sound.keyClick();
 
-        // 1. System Keys
         if (key === 'Index') {
           this.switchActivity(this.activity === 'INDEX' ? 'PIPEDREAM' : 'INDEX');
           return;
@@ -815,11 +959,18 @@
 
         if (key === 'CapsLock') {
           this.capsLock = !this.capsLock;
+          const capsBtn = document.getElementById('capsLockBtn');
+          if (capsBtn) {
+            if (this.capsLock) {
+              capsBtn.classList.add('bg-stone-700', 'text-amber-300');
+            } else {
+              capsBtn.classList.remove('bg-stone-700', 'text-amber-300');
+            }
+          }
           sound.beep(1500, 0.02);
           return;
         }
 
-        // Diamond shortcuts
         if (this.diamondKey) {
           this.diamondKey = false;
           if (key === 'p' || key === 'P') { this.switchActivity('PIPEDREAM'); return; }
@@ -834,7 +985,6 @@
           return;
         }
 
-        // INDEX Mode Hotkeys
         if (this.activity === 'INDEX') {
           if (key === '1') this.switchActivity('PIPEDREAM');
           if (key === '2') this.switchActivity('BASIC');
@@ -843,7 +993,6 @@
           return;
         }
 
-        // Dispatch to current app handler
         if (this.activity === 'PIPEDREAM') {
           this.handlePipeDreamKey(key, shift);
         } else if (this.activity === 'BASIC') {
@@ -882,7 +1031,7 @@
           this.insertPipeChar('    ');
         } else if (key.length === 1) {
           let charToInsert = key;
-          if (this.capsLock && key.length === 1) {
+          if (this.capsLock && key.length === 1 && key >= 'a' && key <= 'z') {
             charToInsert = (shift ? key.toLowerCase() : key.toUpperCase());
           }
           this.insertPipeChar(charToInsert);
@@ -891,12 +1040,12 @@
 
       insertPipeChar(str) {
         if (this.cursorRow === 0) {
-          if (this.pipeDocLine1.length + str.length <= 48) {
+          if (this.pipeDocLine1.length + str.length <= 50) {
             this.pipeDocLine1 = this.pipeDocLine1.slice(0, this.cursorCol) + str + this.pipeDocLine1.slice(this.cursorCol);
             this.cursorCol += str.length;
           }
         } else {
-          if (this.pipeDocLine2.length + str.length <= 48) {
+          if (this.pipeDocLine2.length + str.length <= 50) {
             this.pipeDocLine2 = this.pipeDocLine2.slice(0, this.cursorCol) + str + this.pipeDocLine2.slice(this.cursorCol);
             this.cursorCol += str.length;
           }
@@ -926,7 +1075,6 @@
         } else if (upper.startsWith('PRINT ')) {
           const expr = cmd.substring(6).trim();
           try {
-            // Safe mathematical evaluation
             const sanitized = expr.replace(/PI/gi, Math.PI.toString());
             const result = Function('"use strict";return (' + sanitized + ')')();
             this.basicHistory.push(' ' + result);
@@ -962,10 +1110,9 @@
       }
     }
 
-    // Initialize Z88 System on Window Load
-    let z88 = null;
-    window.addEventListener('DOMContentLoaded', () => {
-      z88 = new SinclairZ88();
+    function bootSinclairZ88() {
+      if (window.z88) return;
+      const z88 = new SinclairZ88();
       window.z88 = z88;
 
       const keyButtons = document.querySelectorAll('.rubber-key');
@@ -980,19 +1127,17 @@
           const charToSend = (isShift && shiftVal) ? shiftVal : key;
           z88.handleKey(charToSend, isShift);
         });
+      });
 
-        window.addEventListener('mouseup', () => {
-          btn.classList.remove('key-pressed');
-        });
+      window.addEventListener('mouseup', () => {
+        keyButtons.forEach(b => b.classList.remove('key-pressed'));
       });
 
       window.addEventListener('keydown', (e) => {
-        // Prevent default browser scrolling on arrow keys and Tab
         if (['Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
           e.preventDefault();
         }
 
-        // Highlight matching on-screen button
         const match = Array.from(keyButtons).find(b => {
           const k = b.getAttribute('data-key');
           return k === e.key || k === e.code || (k && k.toLowerCase() === e.key.toLowerCase());
@@ -1021,23 +1166,35 @@
         keyButtons.forEach(b => b.classList.remove('key-pressed'));
       });
 
-      // UI Control buttons
-      document.getElementById('soundToggle').addEventListener('click', () => {
-        sound.enabled = !sound.enabled;
-        document.getElementById('soundIcon').textContent = sound.enabled ? '🔊' : '🔇';
-        document.getElementById('soundLabel').textContent = sound.enabled ? 'Sound: ON' : 'Sound: OFF';
-      });
+      const soundBtn = document.getElementById('soundToggle');
+      if (soundBtn) {
+        soundBtn.addEventListener('click', () => {
+          sound.enabled = !sound.enabled;
+          document.getElementById('soundIcon').textContent = sound.enabled ? '🔊' : '🔇';
+          document.getElementById('soundLabel').textContent = sound.enabled ? 'Sound: ON' : 'Sound: OFF';
+        });
+      }
 
-      document.getElementById('resetBtn').addEventListener('click', () => {
-        sound.beep(400, 0.15);
-        z88.switchActivity('PIPEDREAM');
-        z88.pipeDocLine1 = "1234567890-=\\qwertyuiop[]asdfghjkl;'£zxcvbnm,./";
-        z88.pipeDocLine2 = "";
-        z88.cursorRow = 0;
-        z88.cursorCol = z88.pipeDocLine1.length;
-        z88.renderCurrentActivity();
-      });
-    });
+      const resetBtn = document.getElementById('resetBtn');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          sound.beep(400, 0.15);
+          z88.switchActivity('PIPEDREAM');
+          z88.pipeDocLine1 = "1234567890-=\\qwertyuiop[]asdfghjkl;'£zxcvbnm,./";
+          z88.pipeDocLine2 = "";
+          z88.cursorRow = 0;
+          z88.cursorCol = z88.pipeDocLine1.length;
+          z88.renderCurrentActivity();
+        });
+      }
+    }
+
+    // Reliable bootloader: checks if DOM is already ready
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      setTimeout(bootSinclairZ88, 1);
+    } else {
+      document.addEventListener('DOMContentLoaded', bootSinclairZ88);
+    }
   </script>
 </body>
 </html>
