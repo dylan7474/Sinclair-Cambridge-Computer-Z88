@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sinclair Cambridge Computer Z88 (Z80 Portable)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --z88-case: #1e2023;
+      --z88-case-bevel: #2b2e34;
+      --z88-lcd-bg: #8ba583;
+      --z88-lcd-dot: #152414;
+      --z88-rubber-key: #25282e;
+      --z88-key-border: #141619;
+      --z88-diamond-cyan: #22d3ee;
+      --z88-square-amber: #fbbf24;
+      --z88-oz-green: #34d399;
+    }
+
+    body {
+      font-family: 'Share Tech Mono', monospace;
+      background-color: #0b0d10;
+      background-image: 
+        radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, #090a0d 0%, #12151a 100%);
+      background-size: 24px 24px, 100% 100%;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .z-rubber-key {
+      position: relative;
+      touch-action: manipulation;
+      transition: transform 0.04s ease, box-shadow 0.04s ease, background-color 0.04s ease;
+      background: linear-gradient(180deg, #2a2e35 0%, #1e2127 100%);
+      color: #e2e8f0;
+      border-radius: 4px;
+      border: 1px solid #3c424d;
+      box-shadow: 0 3px 0 #0e1013, 0 4px 5px rgba(0, 0, 0, 0.55);
+    }
+    .z-rubber-key:active, .z-rubber-key.key-pressed {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #0e1013, 0 2px 2px rgba(0, 0, 0, 0.5);
+      background: #191c22;
+    }
+
+    /* Key color variations */
+    .z-key-sys {
+      background: linear-gradient(180deg, #2d333b 0%, #1f2329 100%);
+      border-color: #454d59;
+    }
+    .z-key-action {
+      background: linear-gradient(180deg, #047857 0%, #065f46 100%);
+      color: #ecfdf5;
+      border-color: #10b981;
+      box-shadow: 0 3px 0 #022c22, 0 4px 5px rgba(0,0,0,0.5);
+    }
+    .z-key-action:active, .z-key-action.key-pressed {
+      box-shadow: 0 1px 0 #022c22, 0 2px 2px rgba(0,0,0,0.4);
+    }
+    .z-key-esc {
+      background: linear-gradient(180deg, #991b1b 0%, #7f1d1d 100%);
+      border-color: #ef4444;
+      box-shadow: 0 3px 0 #450a0a, 0 4px 5px rgba(0,0,0,0.5);
+    }
+    .z-key-esc:active, .z-key-esc.key-pressed {
+      box-shadow: 0 1px 0 #450a0a, 0 2px 2px rgba(0,0,0,0.4);
+    }
+
+    .z88-lcd-frame {
+      background: linear-gradient(145deg, #181b20 0%, #111316 100%);
+      box-shadow: inset 3px 3px 8px rgba(0,0,0,0.9), inset -1px -1px 3px rgba(255,255,255,0.1);
+    }
+    .z88-screen {
+      background-color: var(--z88-lcd-bg);
+      box-shadow: inset 3px 3px 10px rgba(0,0,0,0.65), inset -2px -2px 6px rgba(255,255,255,0.25);
+    }
+
+    /* Page map canvas mini preview styling */
+    .pagemap-border {
+      border-left: 2px solid rgba(21, 36, 20, 0.4);
+    }
+
+    /* Custom scrollbars */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+  </style>
+</head>
+<body class="min-h-screen text-slate-200 flex flex-col justify-between items-center p-2 sm:p-4">
+
+  <header class="w-full max-w-5xl flex flex-wrap items-center justify-between gap-2 py-2 px-3 mb-2 bg-slate-900/80 backdrop-blur border border-slate-800 rounded-xl shadow-lg">
+    <div class="flex items-center gap-2">
+      <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+      <h1 class="text-sm sm:text-base font-bold tracking-wide text-slate-100 flex items-center gap-2">
+        <span class="tracking-widest font-sans text-slate-300 font-black">CAMBRIDGE</span>
+        <span class="text-xs bg-slate-800 text-teal-400 px-2 py-0.5 rounded border border-teal-500/30 font-mono font-bold">Z88</span>
+        <span class="text-xs text-slate-400 font-normal hidden md:inline">Sir Clive Sinclair 1987 &bull; Z80 CMOS 3.28MHz &bull; OZ Operating System</span>
+      </h1>
+    </div>
+
+    <!-- Quick action tools -->
+    <div class="flex items-center gap-2 text-xs">
+      <div class="flex items-center gap-1.5 bg-slate-800 px-2 py-1 rounded border border-slate-700">
+        <span class="text-[10px] text-slate-400">CONTRAST</span>
+        <input id="contrastSlider" type="range" min="30" max="100" value="88" class="w-16 h-1 accent-emerald-500 cursor-pointer">
+      </div>
+
+      <button id="soundToggleBtn" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-slate-300 flex items-center gap-1 transition">
+        <span id="soundIcon">🔊</span>
+        <span id="soundLabel" class="hidden sm:inline">Piezo</span>
+      </button>
+
+      <button id="presetBtn" class="px-2.5 py-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 rounded flex items-center gap-1 transition">
+        <span>💾</span> Examples
+      </button>
+
+      <button id="manualBtn" class="px-2.5 py-1 bg-teal-600/20 hover:bg-teal-600/30 text-teal-300 border border-teal-500/40 rounded flex items-center gap-1 transition">
+        <span>📖</span> Manual
+      </button>
+    </div>
+  </header>
+
+  <main class="w-full max-w-5xl flex flex-col items-center justify-center">
+    
+    <div class="w-full bg-[#1b1d22] rounded-3xl p-3 sm:p-5 shadow-2xl border-4 border-[#101215] relative">
+      
+      <!-- Top Badging Banner & Cartridge Slot Door -->
+      <div class="flex items-center justify-between border-b border-slate-700/60 pb-2 mb-3">
+        <div class="flex items-center gap-3">
+          <div class="flex flex-col">
+            <div class="flex items-baseline gap-2">
+              <span class="text-base sm:text-lg font-black tracking-widest text-slate-100 font-sans">Cambridge Computer</span>
+              <span class="text-sm sm:text-base font-black tracking-wider text-emerald-400 font-mono">Z88</span>
+            </div>
+            <span class="text-[9px] sm:text-[10px] text-slate-400 tracking-wider">PORTABLE Z80 COMPUTER &bull; 32K CMOS RAM &bull; PIPE DREAM IN ROM</span>
+          </div>
+        </div>
+
+        <!-- 3-Slot Cartridge bay flap indicator -->
+        <div class="hidden sm:flex items-center gap-2 bg-[#121417] border border-slate-700/80 rounded-lg px-3 py-1 text-[10px] text-slate-400 font-mono">
+          <span class="text-[9px] uppercase tracking-wider text-slate-500 font-bold">SLOTS:</span>
+          <span class="px-1.5 py-0.5 rounded bg-slate-800 text-emerald-300 border border-slate-700 font-bold">1: RAM 128K</span>
+          <span class="px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 border border-slate-700">2: EPROM 32K</span>
+          <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-500 border border-slate-800">3: EMPTY</span>
+        </div>
+
+        <!-- Clive Sinclair Signature / Power badge -->
+        <div class="flex items-center gap-2">
+          <div class="bg-slate-950 border border-slate-800 rounded px-2.5 py-1 text-right">
+            <span class="text-[9px] block text-slate-400">OPERATING SYSTEM</span>
+            <span class="text-[11px] font-mono font-bold text-emerald-400">OZ v4.0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="z88-lcd-frame p-2.5 sm:p-3 rounded-xl border-2 border-slate-800 shadow-inner mb-3">
+        
+        <!-- Status Annunciator Ribbon -->
+        <div class="flex justify-between items-center text-[10px] sm:text-[11px] font-bold tracking-wider border-b border-[#6f856c]/30 pb-1 mb-1 text-[#1c291b]">
+          <div class="flex gap-2.5 items-center">
+            <span id="annApp" class="px-1.5 py-0.5 rounded bg-[#182618] text-[#8ca583]">BBC BASIC</span>
+            <span id="annIndex" class="opacity-25">INDEX</span>
+            <span id="annPipe" class="opacity-25">PIPEDREAM</span>
+            <span id="annCalc" class="opacity-25">CALC</span>
+            <span id="annDiary" class="opacity-25">DIARY</span>
+            <span id="annFiler" class="opacity-25">FILER</span>
+          </div>
+          
+          <div class="flex gap-3 items-center">
+            <span id="annDiamond" class="opacity-25 text-cyan-800 font-black">◇ DIAMOND</span>
+            <span id="annSquare" class="opacity-25 text-amber-800 font-black">□ SQUARE</span>
+            <span id="annShift" class="opacity-25 bg-emerald-900 text-emerald-200 px-1 rounded">SHIFT</span>
+            <span id="annCaps" class="opacity-25 bg-slate-900 text-slate-200 px-1 rounded">CAPS</span>
+            <span id="z88Clock" class="font-mono text-[#192718]">12:45:00</span>
+          </div>
+        </div>
+
+        <!-- Super-Twist 640x64 LCD Canvas Display (Left 8-lines text/graphics + Right Page Map) -->
+        <div class="z88-screen p-1.5 sm:p-2 rounded-lg flex items-center justify-center overflow-x-auto">
+          <canvas id="lcdCanvas" width="640" height="64" class="w-full max-w-[920px] h-auto rounded shadow-inner block" style="image-rendering: pixelated;"></canvas>
+        </div>
+
+        <!-- Screen Footer Information -->
+        <div class="flex justify-between items-center text-[9px] sm:text-[10px] text-[#243522] font-mono font-semibold pt-1">
+          <span id="lcdBottomLeft">CAMBRIDGE Z88 &bull; ZILOG Z80 CMOS 3.28MHz &bull; 80×8 TEXT &amp; 640×64 GRAPHICS</span>
+          <span id="lcdMemoryFree">FREE RAM: 32,768 BYTES</span>
+        </div>
+      </div>
+
+      <div class="bg-[#14161a] p-2 sm:p-3.5 rounded-2xl border border-slate-800 shadow-xl">
+        
+        <div class="flex flex-col gap-1.5">
+          
+          <!-- Row 1: ESC, 1-0, -, =, \, DEL -->
+          <div class="grid grid-cols-15 gap-1 text-center">
+            <button data-key="Escape" class="z-rubber-key z-key-esc col-span-1 h-8 sm:h-9 text-[10px] sm:text-xs font-bold text-red-100">ESC</button>
+            <button data-key="1" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">1</button>
+            <button data-key="2" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">2</button>
+            <button data-key="3" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">3</button>
+            <button data-key="4" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">4</button>
+            <button data-key="5" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">5</button>
+            <button data-key="6" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">6</button>
+            <button data-key="7" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">7</button>
+            <button data-key="8" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">8</button>
+            <button data-key="9" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">9</button>
+            <button data-key="0" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">0</button>
+            <button data-key="-" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">-</button>
+            <button data-key="=" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">=</button>
+            <button data-key="\" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">\</button>
+            <button data-key="Backspace" class="z-rubber-key z-key-sys col-span-1 h-8 sm:h-9 text-[10px] sm:text-xs font-bold text-amber-300">DEL</button>
+          </div>
+
+          <!-- Row 2: TAB, Q, W, E, R, T, Y, U, I, O, P, [, ], ENTER (large) -->
+          <div class="grid grid-cols-15 gap-1 text-center">
+            <button data-key="Tab" class="z-rubber-key z-key-sys col-span-1 h-8 sm:h-9 text-[10px] sm:text-xs font-bold text-slate-300">TAB</button>
+            <button data-key="Q" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">Q</button>
+            <button data-key="W" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">W</button>
+            <button data-key="E" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">E</button>
+            <button data-key="R" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">R</button>
+            <button data-key="T" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">T</button>
+            <button data-key="Y" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">Y</button>
+            <button data-key="U" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">U</button>
+            <button data-key="I" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">I</button>
+            <button data-key="O" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">O</button>
+            <button data-key="P" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">P</button>
+            <button data-key="[" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">[</button>
+            <button data-key="]" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">]</button>
+            <button data-key="Enter" id="keyEnter" class="z-rubber-key z-key-action col-span-2 h-8 sm:h-9 text-xs font-bold tracking-wider">ENTER ⏎</button>
+          </div>
+
+          <!-- Row 3: INDEX, MENU, A, S, D, F, G, H, J, K, L, ;, ', # -->
+          <div class="grid grid-cols-15 gap-1 text-center">
+            <button id="keyIndex" class="z-rubber-key z-key-sys col-span-1 h-8 sm:h-9 text-[9px] sm:text-[10px] font-bold text-emerald-400">INDEX</button>
+            <button id="keyMenu" class="z-rubber-key z-key-sys col-span-1 h-8 sm:h-9 text-[9px] sm:text-[10px] font-bold text-teal-300">MENU</button>
+            <button data-key="A" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">A</button>
+            <button data-key="S" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">S</button>
+            <button data-key="D" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">D</button>
+            <button data-key="F" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">F</button>
+            <button data-key="G" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">G</button>
+            <button data-key="H" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">H</button>
+            <button data-key="J" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">J</button>
+            <button data-key="K" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">K</button>
+            <button data-key="L" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">L</button>
+            <button data-key=";" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">;</button>
+            <button data-key="'" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">'</button>
+            <button data-key="#" class="z-rubber-key col-span-2 h-8 sm:h-9 text-xs font-bold">#</button>
+          </div>
+
+          <!-- Row 4: SHIFT, HELP, Z, X, C, V, B, N, M, ,, ., /, SHIFT -->
+          <div class="grid grid-cols-15 gap-1 text-center">
+            <button id="keyShiftL" class="z-rubber-key z-key-sys col-span-2 h-8 sm:h-9 text-[10px] sm:text-xs font-bold text-emerald-300">SHIFT</button>
+            <button id="keyHelp" class="z-rubber-key z-key-sys col-span-1 h-8 sm:h-9 text-[9px] sm:text-[10px] font-bold text-cyan-300">HELP</button>
+            <button data-key="Z" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">Z</button>
+            <button data-key="X" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">X</button>
+            <button data-key="C" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">C</button>
+            <button data-key="V" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">V</button>
+            <button data-key="B" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">B</button>
+            <button data-key="N" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">N</button>
+            <button data-key="M" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">M</button>
+            <button data-key="," class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">,</button>
+            <button data-key="." class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">.</button>
+            <button data-key="/" class="z-rubber-key col-span-1 h-8 sm:h-9 text-xs font-bold">/</button>
+            <button id="keyShiftR" class="z-rubber-key z-key-sys col-span-2 h-8 sm:h-9 text-[10px] sm:text-xs font-bold text-emerald-300">SHIFT</button>
+          </div>
+
+          <!-- Row 5: CAPS, DIAMOND (◇), SQUARE (□), SPACEBAR, ◀, ▲, ▼, ▶ -->
+          <div class="grid grid-cols-15 gap-1 text-center items-center">
+            <button id="keyCaps" class="z-rubber-key z-key-sys col-span-2 h-8 sm:h-9 text-[10px] sm:text-xs font-bold text-slate-200">CAPS</button>
+            <button id="keyDiamond" class="z-rubber-key z-key-sys col-span-1 h-8 sm:h-9 text-sm font-black text-cyan-400">◇</button>
+            <button id="keySquare" class="z-rubber-key z-key-sys col-span-1 h-8 sm:h-9 text-sm font-black text-amber-400">□</button>
+            <button data-key=" " class="z-rubber-key col-span-7 h-8 sm:h-9 text-xs font-bold text-slate-500">SPACE</button>
+            <button id="keyCurLeft" class="z-rubber-key z-key-sys col-span-1 h-8 sm:h-9 text-xs font-bold text-slate-200">◀</button>
+            <button id="keyCurRight" class="z-rubber-key z-key-sys col-span-1 h-8 sm:h-9 text-xs font-bold text-slate-200">▶</button>
+            <button id="keyCurDown" class="z-rubber-key z-key-sys col-span-1 h-8 sm:h-9 text-xs font-bold text-slate-200">▼</button>
+            <button id="keyCurUp" class="z-rubber-key z-key-sys col-span-1 h-8 sm:h-9 text-xs font-bold text-slate-200">▲</button>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="flex justify-between items-center px-4 pt-2.5 text-[10px] text-slate-500 font-mono">
+        <span>CAMBRIDGE COMPUTER LTD &bull; CAMBRIDGE, ENGLAND &bull; DESIGNED BY CLIVE SINCLAIR</span>
+        <span class="flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          <span>Z80 CMOS 3.28MHz &bull; ALL 4 AA CELLS HEALTHY</span>
+        </span>
+      </div>
+
+    </div>
+  </main>
+
+  <div id="presetModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-6">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      
+      <div class="p-3 sm:p-4 border-b border-slate-800 flex items-center justify-between bg-slate-800/40">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">💾</span>
+          <h2 class="text-sm sm:text-base font-bold text-emerald-400">Sinclair Cambridge Z88 Preset Library</h2>
+        </div>
+        <button id="closePresetBtn" class="text-slate-400 hover:text-white px-2 py-1 text-base leading-none rounded">✕</button>
+      </div>
+
+      <div class="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs sm:text-sm">
+        
+        <!-- Category: BBC BASIC Demos -->
+        <div>
+          <h3 class="text-xs font-mono font-bold uppercase text-emerald-300 tracking-wider mb-2">⚡ BBC BASIC on Z88 (Richard Russell Z80 ROM)</h3>
+          <div class="space-y-2">
+            
+            <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <div>
+                <span class="font-bold text-slate-100">1. Cambridge Landscape Waveform Plotter (640×64 Graphics)</span>
+                <p class="text-xs text-slate-400 font-sans mt-0.5">Calculates multi-frequency harmonic waves plotted directly onto the reflective LCD canvas.</p>
+                <code class="text-[11px] text-emerald-300 font-mono block mt-1">Uses PLOT 69, X, 32+24*SIN(X/18)*COS(X/35)</code>
+              </div>
+              <button onclick="window.z88App.loadPreset('basic_waves')" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded text-xs shrink-0">
+                Load &amp; RUN
+              </button>
+            </div>
+
+            <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <div>
+                <span class="font-bold text-slate-100">2. Sieve of Eratosthenes (Sinclair Z80 Benchmark)</span>
+                <p class="text-xs text-slate-400 font-sans mt-0.5">The famous 1987 byte-benchmark computing prime numbers up to 100 on the 3.28MHz Z80 CPU.</p>
+              </div>
+              <button onclick="window.z88App.loadPreset('basic_sieve')" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded text-xs shrink-0">
+                Load &amp; RUN
+              </button>
+            </div>
+
+            <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <div>
+                <span class="font-bold text-slate-100">3. Lunar Lander Retro Pocket Simulation</span>
+                <p class="text-xs text-slate-400 font-sans mt-0.5">Simulate gravity and landing thrusters across the 8-line Cambridge LCD.</p>
+              </div>
+              <button onclick="window.z88App.loadPreset('basic_lunar')" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded text-xs shrink-0">
+                Load &amp; RUN
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Category: PipeDream Integrated Suite -->
+        <div>
+          <h3 class="text-xs font-mono font-bold uppercase text-teal-300 tracking-wider mb-2">📊 PipeDream (Integrated Word Processor / Spreadsheet)</h3>
+          <div class="space-y-2">
+            
+            <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <div>
+                <span class="font-bold text-slate-100">1. Expense &amp; Budget Forecast Sheet</span>
+                <p class="text-xs text-slate-400 font-sans mt-0.5">Pre-populated PipeDream spreadsheet with live cell formulas, sum recalculation, and page map preview.</p>
+              </div>
+              <button onclick="window.z88App.loadPreset('pipe_budget')" class="px-3 py-1.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded text-xs shrink-0">
+                Switch to PipeDream
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <div class="p-3 border-t border-slate-800 bg-slate-950 flex justify-end">
+        <button id="closePresetBtn2" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg">
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="manualModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-6">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      
+      <div class="p-3 sm:p-4 border-b border-slate-800 flex items-center justify-between bg-slate-800/40">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">📖</span>
+          <h2 class="text-sm sm:text-base font-bold text-emerald-400">Sinclair Cambridge Z88 Operating Manual</h2>
+        </div>
+        <button id="closeManualBtn" class="text-slate-400 hover:text-white px-2 py-1 text-base leading-none rounded">✕</button>
+      </div>
+
+      <div class="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs sm:text-sm text-slate-300 font-sans leading-relaxed">
+        
+        <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700">
+          <h3 class="text-xs font-mono font-bold text-emerald-300 uppercase mb-1">1. The Z88 System Keys</h3>
+          <ul class="list-disc list-inside space-y-1 text-xs">
+            <li><strong class="text-white">INDEX:</strong> The task manager key. Press anytime to suspend current task and swap between BBC BASIC, PipeDream, Calculator, and Filer.</li>
+            <li><strong class="text-white">MENU:</strong> Reveals the top command menus for the active application.</li>
+            <li><strong class="text-white">HELP:</strong> Displays instant on-screen help.</li>
+            <li><strong class="text-white">◇ (Diamond):</strong> Green modifier key used for quick command shortcuts (e.g. ◇B for BASIC, ◇P for PipeDream).</li>
+            <li><strong class="text-white">□ (Square):</strong> Secondary modifier key for special symbols and formatting.</li>
+          </ul>
+        </div>
+
+        <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700">
+          <h3 class="text-xs font-mono font-bold text-emerald-300 uppercase mb-1">2. BBC BASIC Commands</h3>
+          <p class="text-xs text-slate-400 mb-2">Type these directly into BBC BASIC and press ENTER:</p>
+          <div class="grid grid-cols-2 gap-2 font-mono text-xs">
+            <div class="bg-slate-900 p-2 rounded"><span class="text-emerald-400 font-bold">RUN</span> - Execute program</div>
+            <div class="bg-slate-900 p-2 rounded"><span class="text-emerald-400 font-bold">LIST</span> - List program lines</div>
+            <div class="bg-slate-900 p-2 rounded"><span class="text-emerald-400 font-bold">NEW</span> - Clear current program</div>
+            <div class="bg-slate-900 p-2 rounded"><span class="text-emerald-400 font-bold">CLS</span> - Clear LCD screen</div>
+            <div class="bg-slate-900 p-2 rounded"><span class="text-emerald-400 font-bold">PLOT 69, x, y</span> - Draw point</div>
+            <div class="bg-slate-900 p-2 rounded"><span class="text-emerald-400 font-bold">LINE x1, y1, x2, y2</span> - Vector</div>
+          </div>
+        </div>
+
+        <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700">
+          <h3 class="text-xs font-mono font-bold text-emerald-300 uppercase mb-1">3. The Iconic Z88 Page Map</h3>
+          <p class="text-xs text-slate-300">
+            The right portion of the 640×64 super-twist screen renders the world's first miniature visual document preview, showing page density and margins in real-time as you type in PipeDream!
+          </p>
+        </div>
+
+      </div>
+
+      <div class="p-3 border-t border-slate-800 bg-slate-950 flex justify-end">
+        <button id="closeManualBtn2" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg">
+          Return to Z88
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="w-full text-center py-2 text-[11px] text-slate-500 font-mono">
+    CAMBRIDGE COMPUTER Z88 &bull; Sir Clive Sinclair's Portable Z80 Masterpiece (1987)
+  </footer>
+
+  <script>
+    class Z88Audio {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+      }
+      init() {
+        if (!this.ctx && typeof AudioContext !== 'undefined') {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      }
+      keyClick() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(2400, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.007);
+          gain.gain.setValueAtTime(0.025, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.007);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.008);
+        } catch(e) {}
+      }
+      beep(freq = 1200, duration = 0.06) {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
+          gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + duration);
+        } catch(e) {}
+      }
+    }
+
+    const sound = new Z88Audio();
+
+    class Z88Display {
+      constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext('2d');
+        
+        // Z88 hardware specs: 640 wide x 64 high
+        this.width = 640;
+        this.height = 64;
+        
+        // Text area: 8 lines of text, columns 0-68 (552px wide)
+        // Page Map / Status Area: columns 69-79 (88px wide on the right)
+        this.cols = 70;
+        this.rows = 8;
+        
+        this.pixels = new Uint8Array(this.width * this.height);
+        this.textLines = new Array(8).fill('').map(() => ''.padEnd(this.cols, ' '));
+        
+        this.cursorX = 0;
+        this.cursorY = 0;
+        this.cursorBlink = true;
+        this.contrast = 0.88;
+
+        this.initFont();
+
+        setInterval(() => {
+          this.cursorBlink = !this.cursorBlink;
+          this.render();
+        }, 500);
+
+        this.render();
+      }
+
+      setContrast(val) {
+        this.contrast = Math.max(0.3, Math.min(1.0, val));
+        this.render();
+      }
+
+      cls() {
+        this.pixels.fill(0);
+        this.textLines = new Array(8).fill('').map(() => ''.padEnd(this.cols, ' '));
+        this.cursorX = 0;
+        this.cursorY = 0;
+        this.render();
+      }
+
+      setPixel(x, y, state = 1) {
+        if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
+          this.pixels[y * this.width + x] = state ? 1 : 0;
+        }
+      }
+
+      drawLine(x0, y0, x1, y1, state = 1) {
+        x0 = Math.round(x0); y0 = Math.round(y0);
+        x1 = Math.round(x1); y1 = Math.round(y1);
+        const dx = Math.abs(x1 - x0);
+        const dy = Math.abs(y1 - y0);
+        const sx = (x0 < x1) ? 1 : -1;
+        const sy = (y0 < y1) ? 1 : -1;
+        let err = dx - dy;
+
+        while (true) {
+          this.setPixel(x0, y0, state);
+          if (x0 === x1 && y0 === y1) break;
+          const e2 = 2 * err;
+          if (e2 > -dy) { err -= dy; x0 += sx; }
+          if (e2 < dx) { err += dx; y0 += sy; }
+        }
+      }
+
+      initFont() {
+        this.font = {};
+        const glyphs = {
+          ' ': [0,0,0,0,0],
+          '!': [0,0,0x5F,0,0],
+          '"': [0,0x07,0,0x07,0],
+          '#': [0x14,0x7F,0x14,0x7F,0x14],
+          '$': [0x24,0x2A,0x7F,0x2A,0x12],
+          '%': [0x23,0x13,0x08,0x64,0x62],
+          '&': [0x36,0x49,0x55,0x22,0x50],
+          "'": [0,0x05,0x03,0,0],
+          '(': [0,0x1C,0x22,0x41,0],
+          ')': [0,0x41,0x22,0x1C,0],
+          '*': [0x14,0x08,0x3E,0x08,0x14],
+          '+': [0x08,0x08,0x3E,0x08,0x08],
+          ',': [0,0x50,0x30,0,0],
+          '-': [0x08,0x08,0x08,0x08,0x08],
+          '.': [0,0x60,0x60,0,0],
+          '/': [0x20,0x10,0x08,0x04,0x02],
+          '0': [0x3E,0x51,0x49,0x45,0x3E],
+          '1': [0,0x42,0x7F,0x40,0],
+          '2': [0x42,0x61,0x51,0x49,0x46],
+          '3': [0x21,0x41,0x45,0x4B,0x31],
+          '4': [0x18,0x14,0x12,0x7F,0x10],
+          '5': [0x27,0x45,0x45,0x45,0x39],
+          '6': [0x3C,0x4A,0x49,0x49,0x30],
+          '7': [0x01,0x71,0x09,0x05,0x03],
+          '8': [0x36,0x49,0x49,0x49,0x36],
+          '9': [0x06,0x49,0x49,0x29,0x1E],
+          ':': [0,0x36,0x36,0,0],
+          ';': [0,0x56,0x36,0,0],
+          '<': [0x08,0x14,0x22,0x41,0x80],
+          '=': [0x14,0x14,0x14,0x14,0x14],
+          '>': [0x80,0x41,0x22,0x14,0x08],
+          '?': [0x02,0x01,0x51,0x09,0x06],
+          '@': [0x32,0x49,0x79,0x41,0x3E],
+          '[': [0,0x7F,0x41,0x41,0],
+          ']': [0,0x41,0x41,0x7F,0],
+          '^': [0x04,0x02,0x01,0x02,0x04],
+          '_': [0x40,0x40,0x40,0x40,0x40],
+          '\\': [0x02,0x04,0x08,0x10,0x20]
+        };
+
+        const letters = {
+          'A': [0x7E,0x11,0x11,0x11,0x7E],
+          'B': [0x7F,0x49,0x49,0x49,0x36],
+          'C': [0x3E,0x41,0x41,0x41,0x22],
+          'D': [0x7F,0x41,0x41,0x22,0x1C],
+          'E': [0x7F,0x49,0x49,0x49,0x41],
+          'F': [0x7F,0x09,0x09,0x09,0x01],
+          'G': [0x3E,0x41,0x49,0x49,0x7A],
+          'H': [0x7F,0x08,0x08,0x08,0x7F],
+          'I': [0,0x41,0x7F,0x41,0],
+          'J': [0x20,0x40,0x41,0x3F,0x01],
+          'K': [0x7F,0x08,0x14,0x22,0x41],
+          'L': [0x7F,0x40,0x40,0x40,0x40],
+          'M': [0x7F,0x02,0x0C,0x02,0x7F],
+          'N': [0x7F,0x04,0x08,0x10,0x7F],
+          'O': [0x3E,0x41,0x41,0x41,0x3E],
+          'P': [0x7F,0x09,0x09,0x09,0x06],
+          'Q': [0x3E,0x41,0x51,0x21,0x5E],
+          'R': [0x7F,0x09,0x19,0x29,0x46],
+          'S': [0x46,0x49,0x49,0x49,0x31],
+          'T': [0x01,0x01,0x7F,0x01,0x01],
+          'U': [0x3F,0x40,0x40,0x40,0x3F],
+          'V': [0x1F,0x20,0x40,0x20,0x1F],
+          'W': [0x7F,0x20,0x18,0x20,0x7F],
+          'X': [0x63,0x14,0x08,0x14,0x63],
+          'Y': [0x07,0x08,0x70,0x08,0x07],
+          'Z': [0x61,0x51,0x49,0x45,0x43]
+        };
+
+        for (let k in glyphs) this.font[k] = glyphs[k];
+        for (let k in letters) {
+          this.font[k] = letters[k];
+          this.font[k.toLowerCase()] = letters[k];
+        }
+      }
+
+      printAt(row, text) {
+        if (row >= 0 && row < this.rows) {
+          this.textLines[row] = (text || '').padEnd(this.cols, ' ').substring(0, this.cols);
+          this.render();
+        }
+      }
+
+      scrollUp() {
+        this.textLines.shift();
+        this.textLines.push(''.padEnd(this.cols, ' '));
+        this.cursorY = Math.max(0, this.cursorY - 1);
+        this.render();
+      }
+
+      render() {
+        const cw = this.canvas.width;
+        const ch = this.canvas.height;
+        const scale = cw / this.width;
+
+        // Background reflective LCD hue
+        this.ctx.fillStyle = '#8ca583';
+        this.ctx.fillRect(0, 0, cw, ch);
+
+        // 1. Ghost dots
+        this.ctx.fillStyle = 'rgba(125, 148, 120, 0.35)';
+        for (let y = 0; y < this.height; y += 2) {
+          for (let x = 0; x < this.width; x += 2) {
+            this.ctx.fillRect(x * scale, y * scale, scale, scale);
+          }
+        }
+
+        const tempPixels = new Uint8Array(this.pixels);
+
+        // 2. Render text characters into pixel matrix
+        for (let r = 0; r < this.rows; r++) {
+          const line = this.textLines[r] || '';
+          const yOffset = r * 8; // 8 vertical pixels per line
+
+          for (let c = 0; c < this.cols; c++) {
+            const char = line[c] || ' ';
+            const xOffset = c * 7; // 7 horizontal pixels per column
+            const glyph = this.font[char] || this.font['?'] || [0,0,0,0,0];
+
+            for (let gx = 0; gx < 5; gx++) {
+              const colBits = glyph[gx] || 0;
+              for (let gy = 0; gy < 7; gy++) {
+                if ((colBits >> gy) & 1) {
+                  const px = xOffset + gx;
+                  const py = yOffset + gy;
+                  if (px < 530 && py < this.height) {
+                    tempPixels[py * this.width + px] = 1;
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // 3. Render cursor
+        if (this.cursorBlink && this.cursorY >= 0 && this.cursorY < this.rows && this.cursorX >= 0 && this.cursorX < this.cols) {
+          const cx = this.cursorX * 7;
+          const cy = this.cursorY * 8 + 7;
+          for (let i = 0; i < 5; i++) {
+            if (cx + i < 530 && cy < this.height) {
+              tempPixels[cy * this.width + (cx + i)] = 1;
+            }
+          }
+        }
+
+        // 4. Render Cambridge Z88 Page Map on the right-hand panel (columns 540 to 639)
+        // Vertical divider
+        for (let y = 0; y < 64; y++) {
+          tempPixels[y * this.width + 538] = 1;
+        }
+
+        // Page preview thumbnail borders
+        for (let x = 548; x <= 628; x++) {
+          tempPixels[4 * this.width + x] = 1;
+          tempPixels[60 * this.width + x] = 1;
+        }
+        for (let y = 4; y <= 60; y++) {
+          tempPixels[y * this.width + 548] = 1;
+          tempPixels[y * this.width + 628] = 1;
+        }
+
+        // Document text density micro-lines inside page map
+        for (let y = 8; y <= 56; y += 4) {
+          const lineWidth = Math.min(70, 20 + ((y * 13) % 52));
+          for (let x = 552; x < 552 + lineWidth; x += 2) {
+            tempPixels[y * this.width + x] = 1;
+          }
+        }
+
+        // 5. Paint active pixels with contrast
+        const darkAlpha = Math.max(0.4, this.contrast);
+        this.ctx.fillStyle = `rgba(18, 30, 16, ${darkAlpha})`;
+
+        for (let y = 0; y < this.height; y++) {
+          for (let x = 0; x < this.width; x++) {
+            if (tempPixels[y * this.width + x] === 1) {
+              this.ctx.fillRect(x * scale, y * scale, scale, scale);
+            }
+          }
+        }
+      }
+    }
+
+    class SinclairZ88App {
+      constructor() {
+        this.lcd = new Z88Display('lcdCanvas');
+        
+        // Active Application: 'BASIC', 'PIPEDREAM', 'CALC', 'DIARY', 'FILER', 'INDEX'
+        this.app = 'BASIC';
+        this.prevApp = 'BASIC';
+        this.isShift = false;
+        this.isCaps = true;
+        this.isDiamond = false;
+        this.isSquare = false;
+        
+        this.cmdBuffer = '';
+        this.basicProgram = [];
+        this.basicVariables = {};
+        for (let i = 65; i <= 90; i++) this.basicVariables[String.fromCharCode(i)] = 0;
+
+        // PipeDream spreadsheet data: 8 rows x 6 cols (A-F)
+        this.sheetCols = ['A', 'B', 'C', 'D', 'E'];
+        this.sheetData = {
+          'A1': 'ITEM',    'B1': 'QTY', 'C1': 'UNIT', 'D1': 'TOTAL',
+          'A2': 'Z80 CPU', 'B2': 10,    'C2': 4.50,   'D2': '=B2*C2',
+          'A3': 'RAM 32K', 'B3': 25,    'C3': 6.20,   'D3': '=B3*C3',
+          'A4': 'KEYPAD',  'B4': 15,    'C4': 8.00,   'D4': '=B4*C4'
+        };
+        this.cellRow = 1;
+        this.cellCol = 0; // 0=A, 1=B, etc.
+
+        // Realtime Clock
+        setInterval(() => this.updateClock(), 1000);
+
+        this.initDOM();
+        this.bindEvents();
+        this.switchApp('BASIC');
+      }
+
+      initDOM() {
+        this.annApp = document.getElementById('annApp');
+        this.annIndex = document.getElementById('annIndex');
+        this.annPipe = document.getElementById('annPipe');
+        this.annCalc = document.getElementById('annCalc');
+        this.annDiary = document.getElementById('annDiary');
+        this.annFiler = document.getElementById('annFiler');
+        this.annDiamond = document.getElementById('annDiamond');
+        this.annSquare = document.getElementById('annSquare');
+        this.annShift = document.getElementById('annShift');
+        this.annCaps = document.getElementById('annCaps');
+        this.z88Clock = document.getElementById('z88Clock');
+        this.lcdBottomLeft = document.getElementById('lcdBottomLeft');
+
+        document.getElementById('contrastSlider').addEventListener('input', (e) => {
+          this.lcd.setContrast(e.target.value / 100);
+        });
+      }
+
+      updateClock() {
+        const d = new Date();
+        const str = d.toTimeString().split(' ')[0];
+        if (this.z88Clock) this.z88Clock.textContent = str;
+      }
+
+      updateAnnunciators() {
+        const off = 'opacity-25';
+        const on = 'opacity-100 font-bold';
+
+        this.annApp.textContent = (this.app === 'INDEX') ? 'OZ INDEX' : this.app;
+        this.annIndex.className = (this.app === 'INDEX') ? on : off;
+        this.annPipe.className = (this.app === 'PIPEDREAM') ? on : off;
+        this.annCalc.className = (this.app === 'CALC') ? on : off;
+        this.annDiary.className = (this.app === 'DIARY') ? on : off;
+        this.annFiler.className = (this.app === 'FILER') ? on : off;
+
+        this.annDiamond.className = this.isDiamond ? 'opacity-100 text-cyan-900 font-black' : off;
+        this.annSquare.className = this.isSquare ? 'opacity-100 text-amber-900 font-black' : off;
+        this.annShift.className = this.isShift ? 'opacity-100 bg-emerald-900 text-emerald-200 px-1 rounded' : off;
+        this.annCaps.className = this.isCaps ? 'opacity-100 bg-slate-900 text-slate-200 px-1 rounded' : off;
+      }
+
+      switchApp(newApp) {
+        sound.beep(1600, 0.04);
+        if (this.app !== 'INDEX') this.prevApp = this.app;
+        this.app = newApp;
+        this.cmdBuffer = '';
+        this.updateAnnunciators();
+        this.lcd.cls();
+
+        if (newApp === 'BASIC') {
+          this.lcd.printAt(0, 'Cambridge Z88 BBC BASIC (Z80) (C)1987 R.T.Russell');
+          this.lcd.printAt(1, '32,768 Bytes Free');
+          this.lcd.printAt(2, 'Type RUN, LIST, NEW, or graphics commands.');
+          this.lcd.printAt(3, '>');
+          this.lcd.cursorX = 2;
+          this.lcd.cursorY = 3;
+          this.lcdBottomLeft.textContent = 'BBC BASIC MODE (RUN, LIST, NEW, PLOT 69, LINE)';
+        } else if (newApp === 'PIPEDREAM') {
+          this.renderPipeDream();
+          this.lcdBottomLeft.textContent = 'PIPEDREAM INTEGRATED WORD PROCESSOR & SPREADSHEET';
+        } else if (newApp === 'CALC') {
+          this.lcd.printAt(0, 'CAMBRIDGE Z88 SCIENTIFIC CALCULATOR');
+          this.lcd.printAt(1, 'Tape Memory Ready');
+          this.lcd.printAt(2, 'ANS = 0');
+          this.lcd.printAt(3, 'CALC> ');
+          this.lcd.cursorX = 6;
+          this.lcd.cursorY = 3;
+          this.lcdBottomLeft.textContent = 'CALCULATOR (sin, cos, tan, sqr, log, +, -, *, /)';
+        } else if (newApp === 'DIARY') {
+          const now = new Date();
+          this.lcd.printAt(0, 'CAMBRIDGE Z88 DIARY & CALENDAR');
+          this.lcd.printAt(1, `TODAY: ${now.toDateString()} ${now.toLocaleTimeString()}`);
+          this.lcd.printAt(2, '09:00 - Review Z88 CMOS power consumption');
+          this.lcd.printAt(3, '14:00 - Test 128K RAM cartridge slot 1');
+          this.lcd.printAt(4, '16:30 - PipeDream document backup to EPROM');
+          this.lcd.printAt(5, 'Press INDEX to return to applications.');
+          this.lcdBottomLeft.textContent = 'DIARY & SCHEDULER ACTIVE';
+        } else if (newApp === 'FILER') {
+          this.lcd.printAt(0, 'CAMBRIDGE Z88 OZ FILER');
+          this.lcd.printAt(1, 'DEVICE :RAM.0 (32K Internal) - 24,190 Bytes Free');
+          this.lcd.printAt(2, '  EXPENSES.PD   1,240B   23-Sep-1987  PipeDream');
+          this.lcd.printAt(3, '  WAVEFORM.BAS  2,048B   23-Sep-1987  BBC BASIC');
+          this.lcd.printAt(4, 'DEVICE :RAM.1 (128K Slot 1) - 128,000 Bytes Free');
+          this.lcd.printAt(5, 'DEVICE :EPR.2 (32K Slot 2)  - 32,768 Bytes Used');
+          this.lcdBottomLeft.textContent = 'OZ FILER & CARTRIDGE MANAGEMENT';
+        } else if (newApp === 'INDEX') {
+          this.lcd.printAt(0, '--- CAMBRIDGE Z88 OZ INDEX ---');
+          this.lcd.printAt(1, '[B] BBC BASIC         (Active)');
+          this.lcd.printAt(2, '[P] PipeDream         (Suspended)');
+          this.lcd.printAt(3, '[C] Calculator        (Suspended)');
+          this.lcd.printAt(4, '[D] Diary & Calendar  (Suspended)');
+          this.lcd.printAt(5, '[F] Filer & Memory    (Suspended)');
+          this.lcd.printAt(6, 'Press Letter to Switch or ESC to cancel: ');
+          this.lcd.cursorX = 41;
+          this.lcd.cursorY = 6;
+          this.lcdBottomLeft.textContent = 'TASK SWITCHER: B=BASIC, P=PIPEDREAM, C=CALC, D=DIARY, F=FILER';
+        }
+      }
+
+      renderPipeDream() {
+        this.lcd.cls();
+        this.lcd.printAt(0, 'PipeDream v2.0  File: BUDGET.PD   Col: ' + this.sheetCols[this.cellCol] + ' Row: ' + this.cellRow);
+        this.lcd.printAt(1, '----------------------------------------------------------');
+
+        for (let r = 1; r <= 4; r++) {
+          let line = r + ' | ';
+          for (let c = 0; c < 4; c++) {
+            const cellId = this.sheetCols[c] + r;
+            let val = this.sheetData[cellId];
+            if (val === undefined) val = '';
+            if (typeof val === 'string' && val.startsWith('=')) {
+              val = this.evalPipeFormula(val);
+            }
+            const isSelected = (r === this.cellRow && c === this.cellCol);
+            let s = String(val).padEnd(10, ' ').substring(0, 10);
+            if (isSelected) s = '[' + s.substring(0, 8) + ']';
+            line += s + ' ';
+          }
+          this.lcd.printAt(r + 1, line);
+        }
+
+        const currId = this.sheetCols[this.cellCol] + this.cellRow;
+        const raw = this.sheetData[currId] || '';
+        this.lcd.printAt(6, 'EDIT ' + currId + ': ' + raw);
+        this.lcd.printAt(7, 'Use Arrows to Navigate | Type value + ENTER');
+      }
+
+      evalPipeFormula(formula) {
+        try {
+          let f = formula.substring(1).toUpperCase();
+          for (let r = 1; r <= 4; r++) {
+            for (let c = 0; c < 4; c++) {
+              const id = this.sheetCols[c] + r;
+              let v = this.sheetData[id] || 0;
+              if (typeof v === 'string' && v.startsWith('=')) v = 0;
+              f = f.replace(new RegExp(id, 'g'), v);
+            }
+          }
+          return eval(f);
+        } catch(e) {
+          return '#ERR';
+        }
+      }
+
+      handleKeyChar(char) {
+        sound.keyClick();
+        let c = char;
+
+        // Modifier logic
+        if (this.isShift) {
+          const shiftMap = {
+            '1':'!', '2':'"', '3':'£', '4':'$', '5':'%', '6':'^', '7':'&', '8':'*', '9':'(', '0':')',
+            '-':'_', '=':'+', '[':'{', ']':'}', ';':':', "'":'@', ',':'<', '.':'>', '/':'?'
+          };
+          if (shiftMap[c]) c = shiftMap[c];
+          this.isShift = false;
+          this.updateAnnunciators();
+        } else if (!this.isCaps && c >= 'A' && c <= 'Z') {
+          c = c.toLowerCase();
+        }
+
+        // Diamond shortcuts (◇)
+        if (this.isDiamond) {
+          this.isDiamond = false;
+          this.updateAnnunciators();
+          const upper = c.toUpperCase();
+          if (upper === 'B') return this.switchApp('BASIC');
+          if (upper === 'P') return this.switchApp('PIPEDREAM');
+          if (upper === 'C') return this.switchApp('CALC');
+          if (upper === 'D') return this.switchApp('DIARY');
+          if (upper === 'F') return this.switchApp('FILER');
+        }
+
+        // INDEX Mode selection
+        if (this.app === 'INDEX') {
+          const u = c.toUpperCase();
+          if (u === 'B') return this.switchApp('BASIC');
+          if (u === 'P') return this.switchApp('PIPEDREAM');
+          if (u === 'C') return this.switchApp('CALC');
+          if (u === 'D') return this.switchApp('DIARY');
+          if (u === 'F') return this.switchApp('FILER');
+          return;
+        }
+
+        // PipeDream editing
+        if (this.app === 'PIPEDREAM') {
+          const currId = this.sheetCols[this.cellCol] + this.cellRow;
+          this.cmdBuffer += c;
+          this.sheetData[currId] = this.cmdBuffer;
+          this.renderPipeDream();
+          return;
+        }
+
+        // Terminal buffer
+        this.cmdBuffer += c;
+        this.refreshPromptLine();
+      }
+
+      handleBackspace() {
+        sound.keyClick();
+        if (this.app === 'PIPEDREAM') {
+          const currId = this.sheetCols[this.cellCol] + this.cellRow;
+          if (this.cmdBuffer.length > 0) {
+            this.cmdBuffer = this.cmdBuffer.slice(0, -1);
+            this.sheetData[currId] = this.cmdBuffer;
+            this.renderPipeDream();
+          }
+          return;
+        }
+
+        if (this.cmdBuffer.length > 0) {
+          this.cmdBuffer = this.cmdBuffer.slice(0, -1);
+          this.refreshPromptLine();
+        }
+      }
+
+      refreshPromptLine() {
+        if (this.app === 'BASIC') {
+          const full = '> ' + this.cmdBuffer;
+          this.lcd.printAt(this.lcd.cursorY, full);
+          this.lcd.cursorX = Math.min(68, full.length);
+        } else if (this.app === 'CALC') {
+          const full = 'CALC> ' + this.cmdBuffer;
+          this.lcd.printAt(3, full);
+          this.lcd.cursorX = Math.min(68, full.length);
+        }
+      }
+
+      handleReturn() {
+        sound.beep(1400, 0.04);
+        const input = this.cmdBuffer.trim();
+        this.cmdBuffer = '';
+
+        if (this.app === 'PIPEDREAM') {
+          this.cellRow = Math.min(4, this.cellRow + 1);
+          this.renderPipeDream();
+          return;
+        }
+
+        if (!input) {
+          if (this.app === 'BASIC') {
+            this.lcd.scrollUp();
+            this.lcd.cursorY = 7;
+            this.lcd.printAt(7, '>');
+            this.lcd.cursorX = 2;
+          }
+          return;
+        }
+
+        if (this.app === 'BASIC') {
+          this.executeBBCBasic(input);
+        } else if (this.app === 'CALC') {
+          this.executeCalculator(input);
+        }
+      }
+
+      executeBBCBasic(stmt) {
+        // Line number storage: e.g. 10 PRINT "HELLO"
+        const lineMatch = stmt.match(/^(\d+)\s*(.*)$/);
+        if (lineMatch) {
+          const lineNum = parseInt(lineMatch[1]);
+          const code = lineMatch[2].trim();
+          this.basicProgram = this.basicProgram.filter(item => item.num !== lineNum);
+          if (code) {
+            this.basicProgram.push({ num: lineNum, code });
+            this.basicProgram.sort((a, b) => a.num - b.num);
+          }
+          this.lcd.scrollUp();
+          this.lcd.printAt(7, '>');
+          this.lcd.cursorX = 2;
+          this.lcd.cursorY = 7;
+          return;
+        }
+
+        const upper = stmt.toUpperCase();
+
+        if (upper === 'RUN') {
+          this.runBasicProgram();
+        } else if (upper === 'LIST') {
+          this.lcd.cls();
+          this.basicProgram.slice(0, 7).forEach((l, idx) => {
+            this.lcd.printAt(idx, `${l.num} ${l.code}`);
+          });
+          this.lcd.printAt(7, '>');
+          this.lcd.cursorX = 2;
+          this.lcd.cursorY = 7;
+        } else if (upper === 'NEW') {
+          this.basicProgram = [];
+          this.lcd.scrollUp();
+          this.lcd.printAt(7, 'Program Cleared: 32,768 Bytes Free');
+          setTimeout(() => {
+            this.lcd.scrollUp();
+            this.lcd.printAt(7, '>');
+            this.lcd.cursorX = 2;
+          }, 300);
+        } else if (upper === 'CLS') {
+          this.lcd.cls();
+          this.lcd.printAt(0, '>');
+          this.lcd.cursorX = 2;
+          this.lcd.cursorY = 0;
+        } else {
+          this.interpretBasicLine(stmt);
+          this.lcd.scrollUp();
+          this.lcd.printAt(7, '>');
+          this.lcd.cursorX = 2;
+          this.lcd.cursorY = 7;
+        }
+      }
+
+      runBasicProgram() {
+        if (this.basicProgram.length === 0) {
+          this.lcd.scrollUp();
+          this.lcd.printAt(7, 'No program in memory.');
+          return;
+        }
+
+        this.lcd.cls();
+        this.lcd.printAt(0, 'RUNNING BBC BASIC (Z80)...');
+
+        let pc = 0;
+        const step = () => {
+          if (pc >= this.basicProgram.length) {
+            this.lcd.printAt(7, '> READY');
+            sound.beep(1200, 0.08);
+            return;
+          }
+          const item = this.basicProgram[pc];
+          this.interpretBasicLine(item.code);
+          pc++;
+          setTimeout(step, 20);
+        };
+        step();
+      }
+
+      interpretBasicLine(line) {
+        let s = line.trim();
+        const upper = s.toUpperCase();
+
+        // 1. PLOT 69, x, y (Z88 Graphic Dot)
+        const plotMatch = upper.match(/^PLOT\s+(\d+)\s*,\s*([^,]+)\s*,\s*([^,]+)/);
+        if (plotMatch) {
+          const x = Math.round(this.evalBasicExpr(plotMatch[2]));
+          const y = Math.round(this.evalBasicExpr(plotMatch[3]));
+          this.lcd.setPixel(x, y, 1);
+          this.lcd.render();
+          return;
+        }
+
+        // 2. LINE x1, y1, x2, y2
+        const lineMatch = upper.match(/^LINE\s+([^,]+)\s*,\s*([^,]+)\s*,\s*([^,]+)\s*,\s*([^,]+)/);
+        if (lineMatch) {
+          const x1 = this.evalBasicExpr(lineMatch[1]);
+          const y1 = this.evalBasicExpr(lineMatch[2]);
+          const x2 = this.evalBasicExpr(lineMatch[3]);
+          const y2 = this.evalBasicExpr(lineMatch[4]);
+          this.lcd.drawLine(x1, y1, x2, y2, 1);
+          this.lcd.render();
+          return;
+        }
+
+        // 3. PRINT
+        if (upper.startsWith('PRINT') || upper.startsWith('?')) {
+          let expr = s.replace(/^(PRINT|\?)\s*/i, '');
+          let val = '';
+          if (expr.startsWith('"') && expr.endsWith('"')) {
+            val = expr.slice(1, -1);
+          } else {
+            val = this.evalBasicExpr(expr);
+          }
+          this.lcd.scrollUp();
+          this.lcd.printAt(7, String(val));
+          return;
+        }
+
+        // 4. Variable assignment: A = 10
+        const assignMatch = s.match(/^([A-Z])\s*=\s*(.+)$/i);
+        if (assignMatch) {
+          const varName = assignMatch[1].toUpperCase();
+          const val = this.evalBasicExpr(assignMatch[2]);
+          this.basicVariables[varName] = val;
+          return;
+        }
+      }
+
+      evalBasicExpr(expr) {
+        try {
+          let s = expr.trim();
+          for (let i = 65; i <= 90; i++) {
+            const v = String.fromCharCode(i);
+            s = s.replace(new RegExp(`\\b${v}\\b`, 'g'), `(${this.basicVariables[v] || 0})`);
+          }
+          s = s.replace(/SIN\(/gi, 'Math.sin(');
+          s = s.replace(/COS\(/gi, 'Math.cos(');
+          s = s.replace(/SQR\(/gi, 'Math.sqrt(');
+          return eval(s);
+        } catch(e) {
+          return 0;
+        }
+      }
+
+      executeCalculator(expr) {
+        try {
+          let s = expr;
+          s = s.replace(/π/g, `(${Math.PI})`);
+          s = s.replace(/sin\(/gi, 'Math.sin(');
+          s = s.replace(/cos\(/gi, 'Math.cos(');
+          s = s.replace(/tan\(/gi, 'Math.tan(');
+          s = s.replace(/sqr\(/gi, 'Math.sqrt(');
+          const result = eval(s);
+          this.lcd.printAt(1, expr + ' =');
+          this.lcd.printAt(2, 'ANS = ' + result);
+        } catch(e) {
+          this.lcd.printAt(2, 'Syntax ERROR');
+          sound.beep(300, 0.2);
+        }
+        this.refreshPromptLine();
+      }
+
+      bindEvents() {
+        // Top action buttons
+        document.getElementById('keyIndex').addEventListener('click', () => this.switchApp('INDEX'));
+        document.getElementById('keyMenu').addEventListener('click', () => {
+          sound.keyClick();
+          this.lcd.printAt(0, 'MENU: [B]ASIC  [P]IPEDREAM  [C]ALC  [D]IARY  [F]ILER  [E]XIT');
+        });
+        document.getElementById('keyHelp').addEventListener('click', () => {
+          sound.keyClick();
+          this.lcd.printAt(0, 'HELP: Press INDEX to swap apps. Use ◇+Letter for quick jump.');
+        });
+
+        // Modifiers
+        document.getElementById('keyShiftL').addEventListener('click', () => {
+          sound.keyClick();
+          this.isShift = !this.isShift;
+          this.updateAnnunciators();
+        });
+        document.getElementById('keyShiftR').addEventListener('click', () => {
+          sound.keyClick();
+          this.isShift = !this.isShift;
+          this.updateAnnunciators();
+        });
+        document.getElementById('keyCaps').addEventListener('click', () => {
+          sound.keyClick();
+          this.isCaps = !this.isCaps;
+          this.updateAnnunciators();
+        });
+        document.getElementById('keyDiamond').addEventListener('click', () => {
+          sound.keyClick();
+          this.isDiamond = !this.isDiamond;
+          this.updateAnnunciators();
+        });
+        document.getElementById('keySquare').addEventListener('click', () => {
+          sound.keyClick();
+          this.isSquare = !this.isSquare;
+          this.updateAnnunciators();
+        });
+
+        // Key click actions
+        document.querySelectorAll('[data-key]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const k = btn.getAttribute('data-key');
+            if (k === 'Enter') this.handleReturn();
+            else if (k === 'Backspace') this.handleBackspace();
+            else if (k === 'Escape') this.switchApp('INDEX');
+            else if (k === 'Tab') this.handleKeyChar('    ');
+            else this.handleKeyChar(k);
+          });
+        });
+
+        // Arrow keys
+        document.getElementById('keyCurLeft').addEventListener('click', () => {
+          sound.keyClick();
+          if (this.app === 'PIPEDREAM') {
+            this.cellCol = Math.max(0, this.cellCol - 1);
+            this.renderPipeDream();
+          } else if (this.lcd.cursorX > 0) {
+            this.lcd.cursorX--;
+            this.lcd.render();
+          }
+        });
+        document.getElementById('keyCurRight').addEventListener('click', () => {
+          sound.keyClick();
+          if (this.app === 'PIPEDREAM') {
+            this.cellCol = Math.min(3, this.cellCol + 1);
+            this.renderPipeDream();
+          } else if (this.lcd.cursorX < 68) {
+            this.lcd.cursorX++;
+            this.lcd.render();
+          }
+        });
+        document.getElementById('keyCurUp').addEventListener('click', () => {
+          sound.keyClick();
+          if (this.app === 'PIPEDREAM') {
+            this.cellRow = Math.max(1, this.cellRow - 1);
+            this.renderPipeDream();
+          } else if (this.lcd.cursorY > 0) {
+            this.lcd.cursorY--;
+            this.lcd.render();
+          }
+        });
+        document.getElementById('keyCurDown').addEventListener('click', () => {
+          sound.keyClick();
+          if (this.app === 'PIPEDREAM') {
+            this.cellRow = Math.min(4, this.cellRow + 1);
+            this.renderPipeDream();
+          } else if (this.lcd.cursorY < 7) {
+            this.lcd.cursorY++;
+            this.lcd.render();
+          }
+        });
+
+        // Physical Keyboard listener
+        window.addEventListener('keydown', (e) => {
+          if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+          // Visual tactile button press animation
+          const matchedBtn = document.querySelector(`[data-key="${e.key}"]`);
+          if (matchedBtn) {
+            matchedBtn.classList.add('key-pressed');
+            setTimeout(() => matchedBtn.classList.remove('key-pressed'), 100);
+          }
+
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            this.handleReturn();
+          } else if (e.key === 'Backspace') {
+            e.preventDefault();
+            this.handleBackspace();
+          } else if (e.key === 'Escape') {
+            e.preventDefault();
+            this.switchApp('INDEX');
+          } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            document.getElementById('keyCurLeft').click();
+          } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            document.getElementById('keyCurRight').click();
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            document.getElementById('keyCurUp').click();
+          } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            document.getElementById('keyCurDown').click();
+          } else if (e.key.length === 1) {
+            this.handleKeyChar(e.key);
+          }
+        });
+      }
+
+      loadPreset(type) {
+        document.getElementById('presetModal').classList.add('hidden');
+        sound.beep(1600, 0.08);
+
+        if (type === 'basic_waves') {
+          this.switchApp('BASIC');
+          this.lcd.cls();
+          this.basicProgram = [
+            { num: 10, code: 'CLS' },
+            { num: 20, code: 'LINE 0, 32, 530, 32' },
+            { num: 30, code: 'FOR X = 0 TO 530' },
+            { num: 40, code: 'Y = 32 + 22 * SIN(X / 18) * COS(X / 36)' },
+            { num: 50, code: 'PLOT 69, X, Y' },
+            { num: 60, code: 'NEXT X' },
+            { num: 70, code: 'PRINT "WAVEFORM COMPLETE"' }
+          ];
+          this.runBasicProgram();
+        } else if (type === 'basic_sieve') {
+          this.switchApp('BASIC');
+          this.lcd.cls();
+          this.basicProgram = [
+            { num: 10, code: 'PRINT "CAMBRIDGE Z88 PRIME SIEVE (Z80 3.28MHz)"' },
+            { num: 20, code: 'N = 3' },
+            { num: 30, code: 'D = 2' },
+            { num: 40, code: 'IF N - D * (N / D) = 0 THEN 70' },
+            { num: 50, code: 'D = D + 1' },
+            { num: 60, code: 'IF D < N THEN 40' },
+            { num: 70, code: 'IF D = N THEN PRINT N; " "' },
+            { num: 80, code: 'N = N + 2: IF N < 100 THEN 30' }
+          ];
+          this.runBasicProgram();
+        } else if (type === 'basic_lunar') {
+          this.switchApp('BASIC');
+          this.lcd.cls();
+          this.basicProgram = [
+            { num: 10, code: 'CLS' },
+            { num: 20, code: 'LINE 0, 60, 530, 60' },
+            { num: 30, code: 'LINE 220, 56, 280, 56' },
+            { num: 40, code: 'PRINT "LUNAR MODULE DESCENT"' },
+            { num: 50, code: 'PLOT 69, 250, 20' },
+            { num: 60, code: 'PLOT 69, 251, 20' },
+            { num: 70, code: 'PRINT "TOUCHDOWN CONFIRMED"' }
+          ];
+          this.runBasicProgram();
+        } else if (type === 'pipe_budget') {
+          this.switchApp('PIPEDREAM');
+        }
+      }
+    }
+
+    // Window initialization
+    window.addEventListener('DOMContentLoaded', () => {
+      window.z88App = new SinclairZ88App();
+
+      // Sound toggle
+      const soundBtn = document.getElementById('soundToggleBtn');
+      const soundIcon = document.getElementById('soundIcon');
+      const soundLabel = document.getElementById('soundLabel');
+      soundBtn.addEventListener('click', () => {
+        sound.enabled = !sound.enabled;
+        soundIcon.textContent = sound.enabled ? '🔊' : '🔇';
+        soundLabel.textContent = sound.enabled ? 'Piezo' : 'Muted';
+      });
+
+      // Modals
+      const presetModal = document.getElementById('presetModal');
+      const manualModal = document.getElementById('manualModal');
+
+      document.getElementById('presetBtn').addEventListener('click', () => presetModal.classList.remove('hidden'));
+      document.getElementById('closePresetBtn').addEventListener('click', () => presetModal.classList.add('hidden'));
+      document.getElementById('closePresetBtn2').addEventListener('click', () => presetModal.classList.add('hidden'));
+
+      document.getElementById('manualBtn').addEventListener('click', () => manualModal.classList.remove('hidden'));
+      document.getElementById('closeManualBtn').addEventListener('click', () => manualModal.classList.add('hidden'));
+      document.getElementById('closeManualBtn2').addEventListener('click', () => manualModal.classList.add('hidden'));
+    });
+  </script>
+</body>
+</html>
